@@ -13,6 +13,7 @@ import {
 	project,
 	reactive,
 	reduced,
+	untracked,
 	unwrap,
 } from 'mutts/src'
 import { namedEffect, testing } from './debug'
@@ -389,7 +390,9 @@ export type Intermediates = NodeDesc | NodeDesc[]
 
 const render = memoize((renderer: JSX.Element, scope: Scope) => {
 	const partial = renderer.render(scope)
-	if (renderer.mount) for (const mount of renderer.mount) effect(() => mount(partial))
+	if (renderer.mount)
+		for (const mount of renderer.mount)
+			effect(() => untracked(() => mount(partial)))
 	if (renderer.use)
 		for (const [key, value] of Object.entries(renderer.use) as [string, any])
 			effect(() => {

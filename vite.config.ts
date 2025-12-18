@@ -51,7 +51,7 @@ export default defineConfig({
 								throwIfNamespace: false,
 							},
 						],
-						['@babel/plugin-transform-typescript', { isTSX: true, allowDeclareFields: true }],
+						['@babel/plugin-transform-typescript', { isTSX: id.endsWith('.tsx'), allowDeclareFields: true }],
 					],
 					sourceMaps: true,
 				})

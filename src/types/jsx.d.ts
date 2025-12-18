@@ -10,7 +10,12 @@ declare global {
 	namespace JSX {
 		// biome-ignore lint/suspicious/noConfusingVoidType: Void ends up automatically
 		type Child = Node | string | number | JSX.Element | void | false | null | undefined
-		type Children = Child | readonly Children[]
+		interface ChildrenCollection {
+			readonly __pounce_children_collection: unique symbol
+			readonly length?: never
+			[n: number]: never
+		}
+		type Children = Child | readonly Children[] | ChildrenCollection
 
 		// Base interface for common HTML attributes
 		type BaseHTMLAttributes<N extends Node = HTMLElement> = JSX.IntrinsicThisAttributes<N> &
