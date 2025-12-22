@@ -113,7 +113,7 @@ export const h = (tag: any, props: Record<string, any> = {}, ...children: Child[
 				const rendered = project.array([null], () => {
 					testing.renderingEvent?.('render component', componentCtor.name)
 					const givenProps = reactive(propsInto(regularProps, { children }))
-					return componentCtor(restructureProps(givenProps), childScope)
+					return untracked(() => componentCtor(restructureProps(givenProps), childScope))
 				})
 				return processChildren(rendered, childScope)
 			},

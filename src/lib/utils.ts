@@ -1,4 +1,4 @@
-import { effect, isFunction, isObject, memoize, reactive, touched1, unwrap } from 'mutts/src'
+import { isFunction, isObject, memoize, reactive } from 'mutts/src'
 
 type AllOptional<T> = {
 	[K in keyof T as undefined extends T[K] ? K : never]-?: T[K]
@@ -127,62 +127,67 @@ export interface Compose {
 }
 
 export const compose: Compose = (...args: readonly ComposeArgument[]): Record<string, any> => {
-	const result = reactive(Object.create(null))
-	const discoveredKeys = new Set<PropertyKey>()
-
-	effect(function composeDiscoveryEffect() {
-		for (let i = 0; i < args.length; i++) {
-			const arg = args[i]
-			if (isObject(arg)) {
-				const keys = Reflect.ownKeys(arg)
-				for (const key of keys) {
-					if (discoveredKeys.has(key)) continue
-					discoveredKeys.add(key)
-
-					Object.defineProperty(result, key, {
-						get: () => {
-							for (let j = args.length - 1; j >= 0; j--) {
-								const source = args[j]
-								if (isObject(source) && key in source) {
-									return (source as Record<string, any>)[key as any]
-								}
-							}
-						},
-						set: (v) => {
-							for (let j = args.length - 1; j >= 0; j--) {
-								const source = args[j]
-								if (isObject(source) && key in source) {
-									;(source as Record<string, any>)[key as any] = v
-									return
-								}
-							}
-						},
-						enumerable: true,
-						configurable: true,
-					})
-					touched1(result, { type: 'set', prop: key }, key)
+	return new Proxy(Object.create(null), {
+		get(_, prop, receiver) {
+			for (let i = args.length - 1; i >= 0; i--) {
+				const arg = args[i]
+				const source = isFunction(arg) ? arg(receiver) : arg
+				if (isObject(source) && prop in source) {
+					return (source as any)[prop]
 				}
-			} else if (isFunction(arg)) {
-				const item = (arg as Function)(result)
-				if (isObject(item)) {
-					const keys = Reflect.ownKeys(item)
-					for (const key of keys) {
-						if (discoveredKeys.has(key)) continue
-						discoveredKeys.add(key)
-						Object.defineProperty(result, key, {
-							get: () => (item as Record<string, any>)[key as any],
-							set: (v) => {
-								;(item as Record<string, any>)[key as any] = v
-							},
-							enumerable: true,
-							configurable: true,
-						})
-						touched1(result, { type: 'set', prop: key }, key)
+			}
+			return undefined
+		},
+		set(_, prop, value, receiver) {
+			for (let i = args.length - 1; i >= 0; i--) {
+				const arg = args[i]
+				const source = isFunction(arg) ? arg(receiver) : arg
+				if (isObject(source) && prop in source) {
+					;(source as any)[prop] = value
+					return true
+				}
+			}
+			return false
+		},
+		has(_, prop) {
+			for (let i = args.length - 1; i >= 0; i--) {
+				const arg = args[i]
+				const source = isFunction(arg) ? arg({}) : arg
+				if (isObject(source) && prop in source) return true
+			}
+			return false
+		},
+		ownKeys() {
+			const keys = new Set<string | symbol>()
+			for (const arg of args) {
+				const source = isFunction(arg) ? arg({}) : arg
+				if (isObject(source)) {
+					for (const key of Reflect.ownKeys(source)) {
+						if (typeof key === 'string' || typeof key === 'symbol') {
+							keys.add(key)
+						}
 					}
 				}
 			}
-		}
+			return Array.from(keys)
+		},
+		getOwnPropertyDescriptor(_, prop) {
+			for (let i = args.length - 1; i >= 0; i--) {
+				const arg = args[i]
+				const source = isFunction(arg) ? arg({}) : arg
+				if (isObject(source) && prop in source) {
+					const desc = Reflect.getOwnPropertyDescriptor(source, prop)
+					if (desc) {
+						return {
+							enumerable: desc.enumerable,
+							configurable: true,
+							get: () => (source as any)[prop],
+							set: (v: any) => ((source as any)[prop] = v),
+						}
+					}
+				}
+			}
+			return undefined
+		},
 	})
-
-	return result
 }

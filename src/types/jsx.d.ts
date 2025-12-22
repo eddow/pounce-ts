@@ -91,13 +91,15 @@ declare global {
 					if?: any
 					use?: (target: N) => void
 					else?: true
-					when?: any
+				when?: any
 			  } & {
 					[K in `use:${string}`]: any
 			  } & {
 					[K in `if:${string}`]?: any
 			  } & {
 					[K in `when:${string}`]?: any
+			  } & {
+					[K in `update:${string}`]?: (val: any) => void
 			  })
 
 		type ElementIntrinsicAttributes<N extends Node | readonly Node[] | undefined> =

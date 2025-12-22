@@ -1,4 +1,4 @@
-import { cleanedBy, effect, reactive, touched1 } from 'mutts/src'
+import {} from 'mutts/src'
 
 const NAME_SPACED_SYMBOL = Symbol.for('pounceTS.nameSpaced')
 // TODO: check and fix the given prop with namespaced parts - which comes first, how it ends up
@@ -57,60 +57,111 @@ export type NameSpacedComponent<Component extends (...args: any[]) => any> = Com
 export function restructureProps<Props extends Record<string, any> | undefined>(props: Props) {
 	if (!props || typeof props !== 'object') return props
 
-	const target = reactive(Object.create(null))
-	const discoveredKeys = new Set<PropertyKey>()
+	const source = props
+	const namespaces = new Map<string, any>()
 
-	const discovery = effect(function restructurePropsDiscoveryEffect() {
-		const keys = Reflect.ownKeys(props)
-		for (const key of keys) {
-			if (discoveredKeys.has(key)) continue
-			discoveredKeys.add(key)
-
-			if (typeof key !== 'string') {
-				Object.defineProperty(target, key, {
-					get: () => props[key as any],
-					set: (v) => {
-						props[key as any] = v
-					},
-					enumerable: true,
-					configurable: true,
-				})
-				touched1(target, { type: 'set', prop: key }, key)
-				continue
-			}
-
-			const match = key.match(/^([^:]+):(.+)$/)
-			if (match) {
-				const [, namespace, subKey] = match
-				if (!Object.hasOwn(target, namespace)) {
-					target[namespace] = reactive(Object.create(null))
-				}
-				const nsTarget = target[namespace]
-				Object.defineProperty(nsTarget, subKey, {
-					get: () => props[key as any],
-					set: (v) => {
-						props[key as any] = v
-					},
-					enumerable: true,
-					configurable: true,
-				})
-				touched1(nsTarget, { type: 'set', prop: subKey }, subKey)
-			} else {
-				Object.defineProperty(target, key, {
-					get: () => props[key as any],
-					set: (v) => {
-						props[key as any] = v
-					},
-					enumerable: true,
-					configurable: true,
-				})
-				touched1(target, { type: 'set', prop: key }, key)
-			}
+	function getNamespace(ns: string) {
+		let proxy = namespaces.get(ns)
+		if (!proxy) {
+			proxy = new Proxy(source, {
+				get(target, prop, receiver) {
+					if (typeof prop === 'string') {
+						const fullname = `${ns}:${prop}`
+						return Reflect.get(target, fullname, receiver)
+					}
+					return Reflect.get(target, prop, receiver)
+				},
+				set(target, prop, value, receiver) {
+					if (typeof prop === 'string') {
+						const fullname = `${ns}:${prop}`
+						return Reflect.set(target, fullname, value, receiver)
+					}
+					return Reflect.set(target, prop, value, receiver)
+				},
+				has(target, prop) {
+					if (typeof prop === 'string') {
+						const fullname = `${ns}:${prop}`
+						return Reflect.has(target, fullname)
+					}
+					return Reflect.has(target, prop)
+				},
+				ownKeys(target) {
+					const prefix = `${ns}:`
+					return Reflect.ownKeys(target)
+						.filter((k) => typeof k === 'string' && k.startsWith(prefix))
+						.map((k) => (k as string).slice(prefix.length))
+				},
+				getOwnPropertyDescriptor(target, prop) {
+					if (typeof prop === 'string') {
+						const fullname = `${ns}:${prop}`
+						const desc = Reflect.getOwnPropertyDescriptor(target, fullname)
+						if (desc) return desc
+					}
+					return Reflect.getOwnPropertyDescriptor(target, prop)
+				},
+			})
+			namespaces.set(ns, proxy)
 		}
-	})
+		return proxy
+	}
 
-	cleanedBy(target, discovery)
-	return target
+	return new Proxy(source, {
+		get(target, prop, receiver) {
+			// Direct access (including symbols)
+			if (Reflect.has(target, prop)) {
+				return Reflect.get(target, prop, receiver)
+			}
+
+			// Namespace access
+			if (typeof prop === 'string') {
+				const prefix = `${prop}:`
+				const keys = Reflect.ownKeys(target)
+				if (keys.some((k) => typeof k === 'string' && k.startsWith(prefix))) {
+					return getNamespace(prop)
+				}
+			}
+
+			return Reflect.get(target, prop, receiver)
+		},
+		has(target, prop) {
+			if (Reflect.has(target, prop)) return true
+			if (typeof prop === 'string') {
+				const prefix = `${prop}:`
+				return Reflect.ownKeys(target).some((k) => typeof k === 'string' && k.startsWith(prefix))
+			}
+			return false
+		},
+		ownKeys(target) {
+			const keys = new Set(Reflect.ownKeys(target))
+			for (const key of keys) {
+				if (typeof key === 'string') {
+					const match = key.match(/^([^:]+):(.+)$/)
+					if (match) {
+						keys.delete(key)
+						keys.add(match[1])
+					}
+				}
+			}
+			return Array.from(keys) as (string | symbol)[]
+		},
+		getOwnPropertyDescriptor(target, prop) {
+			const desc = Reflect.getOwnPropertyDescriptor(target, prop)
+			if (desc) return desc
+
+			if (typeof prop === 'string') {
+				const prefix = `${prop}:`
+				const keys = Reflect.ownKeys(target)
+				if (keys.some((k) => typeof k === 'string' && k.startsWith(prefix))) {
+					return {
+						enumerable: true,
+						configurable: true,
+						value: getNamespace(prop),
+					}
+				}
+			}
+			return undefined
+		},
+	})
 }
 
 export function isNameSpacedComponent(component: unknown): boolean {
