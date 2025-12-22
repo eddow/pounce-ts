@@ -15,8 +15,19 @@ function ResizeSandbox(_props: {}, scope: Scope) {
 			const rect = entries[0].contentRect
 			const width = Math.round(rect.width)
 			const height = Math.round(rect.height)
-			if (isFunction(value)) value(width, height)
-			else {
+			if (isFunction(value)) {
+				// Support two shapes:
+				// - callback: (w, h) => void
+				// - getter: () => { width, height }
+				if (value.length >= 2) value(width, height)
+				else {
+					const next = value()
+					if (next && typeof next === 'object') {
+						next.width = width
+						next.height = height
+					}
+				}
+			} else if (value && typeof value === 'object') {
 				value.width = width
 				value.height = height
 			}

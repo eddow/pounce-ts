@@ -9,6 +9,9 @@ const projectRootDir = dirname(fileURLToPath(import.meta.url))
 export default defineConfig({
 	root: '.',
 	server: {
+		fs: {
+			allow: [projectRootDir, resolvePath(projectRootDir, '../mutts')],
+		},
 		headers: {
 			'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
 			Pragma: 'no-cache',
@@ -63,7 +66,7 @@ export default defineConfig({
 	],
 	esbuild: false,
 	optimizeDeps: {
-		force: true,
+		exclude: ['mutts'],
 	},
 	build: {
 		outDir: 'dist',

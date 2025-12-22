@@ -8,7 +8,7 @@ export default defineConfig({
 	},
 	reporter: [['list'], ['html', { open: 'never' }]],
 	use: {
-		baseURL: 'http://127.0.0.1:4173',
+		baseURL: 'http://127.0.0.1:5173',
 		headless: true,
 		trace: 'retain-on-failure',
 	},
@@ -19,10 +19,10 @@ export default defineConfig({
 		},
 	],
 	webServer: {
-		command: 'npm run dev -- --host=127.0.0.1 --port=4173',
-		port: 4173,
+		command: 'npm run dev -- --host=127.0.0.1 --port=5173',
+		port: 5173,
 		timeout: 120_000,
-		reuseExistingServer: !process.env.CI,
+		reuseExistingServer: true,
 	},
 })
 

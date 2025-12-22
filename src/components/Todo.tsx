@@ -2,7 +2,7 @@
  * Todo Web Component using inline JSX templating
  */
 
-import { effect, memoize, trackEffect } from 'mutts/src'
+import { effect, memoize } from 'mutts/src'
 import './Todo.scss'
 import { array, compose } from '../lib/utils'
 import { Scope } from '../lib'
@@ -27,9 +27,6 @@ export default function TodoWebComponent(
 	},
 	scope: Scope
 ) {
-	trackEffect((obj, evolution) => {
-		console.log(obj, evolution)
-	})
 	const state = compose(
 		{
 			placeholder: 'Add a new todo...',
@@ -40,8 +37,6 @@ export default function TodoWebComponent(
 		},
 		props
 	)
-
-	console.log('🎯 Todo component mounted!', { scope })
 	effect(() => {
 		return () => {
 			console.log('👋 Todo component unmounted!', { todoCount: state.todos.length })
@@ -134,11 +129,10 @@ export default function TodoWebComponent(
 
 			{/* Todo list */}
 			<>
-				<div if={filteredTodos().length > 0} class="todo-list">
+				<div if={() => filteredTodos().length > 0} class="todo-list">
 					<for each={filteredTodos()}>
 						{(todo) => (
 							<div class="todo-item">
-								{console.log('render', todo.text)}
 								<input type="checkbox" checked={todo.completed} />
 								<span class={['todo-text', { completed: todo.completed }]}>{todo.text}</span>
 								<button class="delete-button" onClick={() => deleteTodo(todo.id)}>

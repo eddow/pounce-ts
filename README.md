@@ -20,14 +20,14 @@ Redoing one was done to have something simple, who is simply reactive without ha
 
 Complete documentation is available in the [docs folder](src/docs):
 
-- **[Getting Started](src/docs/getting-started.md)** - Introduction and quick start guide
-- **[Components](src/docs/components.md)** - Building and using components
-- **[Reactivity](src/docs/reactivity.md)** - Understanding reactive state and effects
-- **[Two-Way Binding](src/docs/binding.md)** - Form inputs and data binding
-- **[Advanced Features](src/docs/advanced.md)** - Conditional rendering, scopes, and more
-- **[API Reference](src/docs/api-reference.md)** - Complete API documentation
-- **[Migration Guide](src/docs/migration.md)** - Migrating to the new bindApp pattern
-- **[Examples](src/docs/examples.md)** - Complete working examples
+- **[Getting Started](docs/getting-started.md)** - Introduction and quick start guide
+- **[Components](docs/components.md)** - Building and using components
+- **[Reactivity](docs/reactivity.md)** - Understanding reactive state and effects
+- **[Two-Way Binding](docs/binding.md)** - Form inputs and data binding
+- **[Advanced Features](docs/advanced.md)** - Conditional rendering, scopes, and more
+- **[API Reference](docs/api-reference.md)** - Complete API documentation
+- **[Migration Guide](docs/migration.md)** - Migrating to the new bindApp pattern
+- **[Examples](docs/examples.md)** - Complete working examples
 
 ## 🚀 Quick Start
 
@@ -127,14 +127,14 @@ function Counter(props: { value: number, onReset?(): void }) {
 
 ## 📚 Learn More
 
-- Read the [Getting Started Guide](src/docs/getting-started.md)
-- Explore [Components](src/docs/components.md)
-- Understand [Reactivity](src/docs/reactivity.md)
-- Master [Two-Way Binding](src/docs/binding.md)
-- Check out [Advanced Features](src/docs/advanced.md)
-- Browse the [API Reference](src/docs/api-reference.md)
-- Follow the [Migration Guide](src/docs/migration.md)
-- See [Examples](src/docs/examples.md)
+- Read the [Getting Started Guide](docs/getting-started.md)
+- Explore [Components](docs/components.md)
+- Understand [Reactivity](docs/reactivity.md)
+- Master [Two-Way Binding](docs/binding.md)
+- Check out [Advanced Features](docs/advanced.md)
+- Browse the [API Reference](docs/api-reference.md)
+- Follow the [Migration Guide](docs/migration.md)
+- See [Examples](docs/examples.md)
 
 ## 🛠️ Tech Stack
 

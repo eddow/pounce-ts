@@ -22,14 +22,13 @@ test.describe('Main demo components', () => {
 	test('todo workflow adds items', async ({ page }) => {
 		const todoInput = page.locator('#app .todo-input')
 		await todoInput.fill('Write Playwright tests')
+		await expect(todoInput).toHaveValue('Write Playwright tests')
 		await page.locator('#app .add-button').click()
+		await expect(todoInput).toHaveValue('')
 
 		const todoItems = page.locator('#app .todo-item')
-		const count = await todoItems.count()
-		expect(count).toBeGreaterThan(0)
-		
-		// Verify the new item is visible
-		await expect(todoItems.last().locator('.todo-text')).toHaveText('Write Playwright tests')
+		await expect(todoItems).toHaveCount(1)
+		await expect(todoItems.first().locator('.todo-text')).toHaveText('Write Playwright tests')
 	})
 })
 

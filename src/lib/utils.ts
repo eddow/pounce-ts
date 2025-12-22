@@ -1,4 +1,4 @@
-import { effect, isFunction, isObject, memoize, reactive, touched1 } from 'mutts/src'
+import { effect, isFunction, isObject, memoize, reactive, touched1, unwrap } from 'mutts/src'
 
 type AllOptional<T> = {
 	[K in keyof T as undefined extends T[K] ? K : never]-?: T[K]
@@ -96,67 +96,93 @@ export function isElement(value: any): value is JSX.Element {
 }
 // No way to have it recursive and working
 type ComposeArgument = Record<string, any> | ((from: any) => Record<string, any>)
-export function compose<A extends object>(a: A | (() => A)): A
-export function compose<A extends object, B extends object>(
-	a: A | (() => A),
-	b: B | ((x: A) => B)
-): A & B
-export function compose<A extends object, B extends object, C extends object>(
-	a: A | (() => A),
-	b: B | ((x: A) => B),
-	c: C | ((x: A & B) => C)
-): A & B & C
-export function compose<A extends object, B extends object, C extends object, D extends object>(
-	a: A | (() => A),
-	b: B | ((x: A) => B),
-	c: C | ((x: A & B) => C),
-	d: D | ((x: A & B & C) => D)
-): A & B & C & D
-export function compose<
-	A extends object,
-	B extends object,
-	C extends object,
-	D extends object,
-	E extends object,
->(
-	a: A | (() => A),
-	b: B | ((x: A) => B),
-	c: C | ((x: A & B) => C),
-	d: D | ((x: A & B & C) => E)
-): A & B & C & D & E
-export function compose<
-	A extends object,
-	B extends object,
-	C extends object,
-	D extends object,
-	E extends object,
-	F extends object,
->(
-	a: A | (() => A),
-	b: B | ((x: A) => B),
-	c: C | ((x: A & B) => C),
-	d: D | ((x: A & B & C) => E),
-	e: E | ((x: A & B & C & D) => F)
-): A & B & C & D & E & F
-export function compose(...args: readonly ComposeArgument[]): Record<string, any>
-export function compose(...args: readonly ComposeArgument[]): Record<string, any> {
-	let result = reactive(Object.create(null))
-	function addItem(item: ComposeArgument) {
-		let itemValues: Record<string, any>
-		if (isObject(item)) {
-			itemValues = reactive(item)
-		} else if (isFunction(item)) {
-			const from = result
-			result = reactive(Object.create(result))
-			const factory = /*memoize(item)*/ item as (from: Record<string, any>) => Record<string, any>
-			itemValues = reactive(factory(from!))
-		} else throw new Error('Invalid compose argument')
-		if (itemValues)
-			for (const [key, value] of Object.entries(Object.getOwnPropertyDescriptors(itemValues))) {
-				Object.defineProperty(result, key, value)
-				touched1(result, { type: 'set', prop: key }, key)
+export interface Compose {
+	<A extends object>(a: A | (() => A)): A
+	<A extends object, B extends object>(a: A | (() => A), b: B | ((x: A) => B)): A & B
+	<A extends object, B extends object, C extends object>(
+		a: A | (() => A),
+		b: B | ((x: A) => B),
+		c: C | ((x: A & B) => C)
+	): A & B & C
+	<A extends object, B extends object, C extends object, D extends object>(
+		a: A | (() => A),
+		b: B | ((x: A) => B),
+		c: C | ((x: A & B) => C),
+		d: D | ((x: A & B & C) => D)
+	): A & B & C & D
+	<A extends object, B extends object, C extends object, D extends object, E extends object>(
+		a: A | (() => A),
+		b: B | ((x: A) => B),
+		c: C | ((x: A & B) => C),
+		d: D | ((x: A & B & C) => E)
+	): A & B & C & D & E
+	<A extends object, B extends object, C extends object, D extends object, E extends object, F extends object>(
+		a: A | (() => A),
+		b: B | ((x: A) => B),
+		c: C | ((x: A & B) => C),
+		d: D | ((x: A & B & C) => E),
+		e: E | ((x: A & B & C & D) => F)
+	): A & B & C & D & E & F
+	(...args: readonly ComposeArgument[]): Record<string, any>
+}
+
+export const compose: Compose = (...args: readonly ComposeArgument[]): Record<string, any> => {
+	const result = reactive(Object.create(null))
+	const discoveredKeys = new Set<PropertyKey>()
+
+	effect(function composeDiscoveryEffect() {
+		for (let i = 0; i < args.length; i++) {
+			const arg = args[i]
+			if (isObject(arg)) {
+				const keys = Reflect.ownKeys(arg)
+				for (const key of keys) {
+					if (discoveredKeys.has(key)) continue
+					discoveredKeys.add(key)
+
+					Object.defineProperty(result, key, {
+						get: () => {
+							for (let j = args.length - 1; j >= 0; j--) {
+								const source = args[j]
+								if (isObject(source) && key in source) {
+									return (source as Record<string, any>)[key as any]
+								}
+							}
+						},
+						set: (v) => {
+							for (let j = args.length - 1; j >= 0; j--) {
+								const source = args[j]
+								if (isObject(source) && key in source) {
+									;(source as Record<string, any>)[key as any] = v
+									return
+								}
+							}
+						},
+						enumerable: true,
+						configurable: true,
+					})
+					touched1(result, { type: 'set', prop: key }, key)
+				}
+			} else if (isFunction(arg)) {
+				const item = (arg as Function)(result)
+				if (isObject(item)) {
+					const keys = Reflect.ownKeys(item)
+					for (const key of keys) {
+						if (discoveredKeys.has(key)) continue
+						discoveredKeys.add(key)
+						Object.defineProperty(result, key, {
+							get: () => (item as Record<string, any>)[key as any],
+							set: (v) => {
+								;(item as Record<string, any>)[key as any] = v
+							},
+							enumerable: true,
+							configurable: true,
+						})
+						touched1(result, { type: 'set', prop: key }, key)
+					}
+				}
 			}
-	}
-	for (const item of args) effect(() => addItem(item))
+		}
+	})
+
 	return result
 }

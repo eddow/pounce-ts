@@ -1,6 +1,7 @@
 import {
 	atomic,
 	biDi,
+	cleanedBy,
 	effect,
 	isFunction,
 	isNonReactive,
@@ -9,7 +10,6 @@ import {
 	isString,
 	isSymbol,
 	memoize,
-	organized,
 	project,
 	reactive,
 	reduced,
@@ -53,82 +53,52 @@ function forward(tag: string, children: readonly JSX.Element[], scope: Scope) {
  * Custom h() function for JSX rendering - returns a mount function
  */
 export const h = (tag: any, props: Record<string, any> = {}, ...children: Child[]): JSX.Element => {
-	const propsBuckets = organized(
-		props || {},
-		({ key, value }, target) => {
-			if (typeof key !== 'string') return
-			switch (key) {
-				case 'this': {
-					const setComponent = value?.set
-					if (!isFunction(setComponent)) throw new Error('`this` attribute must be an L-value')
-					const mountEntry = (v: any) => {
-						setComponent(v)
-					}
-					target.meta.mount = [mountEntry, ...(target.meta.mount || [])]
-					return () => {
-						const mounts = target.meta.mount || []
-						target.meta.mount = mounts.filter((fn: any) => fn !== mountEntry)
-						if (!target.meta.mount.length) delete target.meta.mount
-					}
+	const categories: Record<PropertyKey, any> = {}
+	const node: Record<string, any> = {}
+
+	for (const [key, value] of Object.entries(props || {})) {
+		if (typeof key !== 'string') continue
+		switch (key) {
+			case 'this': {
+				const setComponent = value?.set
+				if (!isFunction(setComponent)) throw new Error('`this` attribute must be an L-value')
+				const mountEntry = (v: any) => {
+					setComponent(v)
 				}
-				case 'else': {
-					if (value !== true) throw new Error('`else` attribute must not specify a value')
-					target.meta.else = true
-					return () => {
-						delete target.meta.else
-					}
+				categories.mount = [mountEntry, ...(categories.mount || [])]
+				break
+			}
+			case 'else': {
+				if (value !== true) throw new Error('`else` attribute must not specify a value')
+				categories.else = true
+				break
+			}
+			case 'if': {
+				categories.condition = valuedAttributeGetter(value)
+				break
+			}
+			case 'use': {
+				const mountEntry = valuedAttributeGetter(value)()
+				if (mountEntry !== undefined) {
+					categories.mount = [mountEntry, ...(categories.mount || [])]
 				}
-				case 'if': {
-					const descriptor = {
-						get: valuedAttributeGetter(value),
-						enumerable: true,
-						configurable: true,
-					}
-					Object.defineProperty(target.meta, 'condition', descriptor)
-					return () => {
-						delete target.meta.condition
-					}
-				}
-				case 'use': {
-					const mountEntry = valuedAttributeGetter(value)()
-					if (mountEntry !== undefined) {
-						target.meta.mount = [mountEntry, ...(target.meta.mount || [])]
-						return () => {
-							const mounts = target.meta.mount || []
-							target.meta.mount = mounts.filter((fn: any) => fn !== mountEntry)
-							if (!target.meta.mount.length) delete target.meta.mount
-						}
-					}
-					return
-				}
-				default: {
-					const match = key.match(/^([^:]+):(.+)$/)
-					if (match && match.length === 3 && ['use', 'if', 'when'].includes(match[1])) {
-						const [, category, name] = match
-						target.meta[category] ??= {}
-						Object.defineProperty(target.meta[category], name, {
-							get: valuedAttributeGetter(value),
-							enumerable: true,
-							configurable: true,
-						})
-						return () => {
-							if (target.meta[category]) {
-								delete target.meta[category][name]
-								if (!Reflect.ownKeys(target.meta[category]).length) delete target.meta[category]
-							}
-						}
-					}
-					target.node[key] = value
-					return () => {
-						delete target.node[key]
-					}
+				break
+			}
+			default: {
+				const match = key.match(/^([^:]+):(.+)$/)
+				if (match && match.length === 3 && ['use', 'if', 'when'].includes(match[1])) {
+					const [, category, name] = match
+					categories[category] ??= {}
+					categories[category][name] = valuedAttributeGetter(value)
+				} else {
+					node[key] = value
 				}
 			}
-		},
-		{ meta: {} as Record<PropertyKey, any>, node: {} as Record<string, any> }
-	)
-	const collectedCategories = propsBuckets.meta
-	const regularProps = propsBuckets.node
+		}
+	}
+
+	const regularProps = node
+	const collectedCategories = categories
 	let mountObject: any
 	const resolvedTag = isString(tag) ? intrinsicComponentAliases[tag] : tag
 	const componentCtor = typeof resolvedTag === 'function' && resolvedTag
@@ -157,25 +127,29 @@ export const h = (tag: any, props: Record<string, any> = {}, ...children: Child[
 		}
 		function setHtmlProperty(key: string, value: any) {
 			const normalizedKey = key.toLowerCase()
-			if (value === undefined || value === false) {
-				testing.renderingEvent?.('remove attribute', element, normalizedKey)
-				element.removeAttribute(normalizedKey)
-				return
-			}
-			const stringValue = String(value)
-			testing.renderingEvent?.('set attribute', element, normalizedKey, stringValue)
 			try {
 				if (normalizedKey in element) {
-					element[normalizedKey] = stringValue
+					const current = (element as any)[normalizedKey]
+					if (typeof current === 'boolean') (element as any)[normalizedKey] = Boolean(value)
+					else (element as any)[normalizedKey] = value ?? ''
 					return
 				}
 				if (key in element) {
-					element[key] = stringValue
+					const current = (element as any)[key]
+					if (typeof current === 'boolean') (element as any)[key] = Boolean(value)
+					else (element as any)[key] = value ?? ''
 					return
 				}
 			} catch {
 				// Fallback to attribute assignment below
 			}
+			if (value === undefined || value === false) {
+				testing.renderingEvent?.('remove attribute', element, normalizedKey)
+				element.removeAttribute(normalizedKey)
+				return
+			}
+			const stringValue = value === true ? '' : String(value)
+			testing.renderingEvent?.('set attribute', element, normalizedKey, stringValue)
 			element.setAttribute(normalizedKey, stringValue)
 		}
 		function applyStyleProperties(computedStyles: Record<string, any>) {
@@ -183,35 +157,41 @@ export const h = (tag: any, props: Record<string, any> = {}, ...children: Child[
 			testing.renderingEvent?.('assign style', element, computedStyles)
 			Object.assign(element.style, computedStyles)
 		}
-		organized(regularProps, ({ key, value }) => {
-			if (key === 'children') return
+		for (const [key, value] of Object.entries(regularProps)) {
+			if (key === 'children') continue
 			const runCleanup: (() => void)[] = []
 
-			if (typeof key !== 'string') return
+			if (typeof key !== 'string') continue
 
 			if (/^on[A-Z]/.test(key)) {
 				const eventType = key.slice(2).toLowerCase()
-				return namedEffect(`event:${key}`, () => {
+				const stop = namedEffect(`event:${key}`, () => {
 					const handlerCandidate = value.get ? value.get() : value()
 					if (handlerCandidate === undefined) return
 					const registeredEvent = atomic(handlerCandidate)
 					return listen(element, eventType, registeredEvent)
 				})
+				cleanedBy(element, stop)
+				continue
 			}
 			if (key === 'class') {
 				const getter = valuedAttributeGetter(value)
-				return effect(function className() {
+				const stop = effect(function classNameEffect() {
 					const nextClassName = classNames(getter() as ClassInput)
 					testing.renderingEvent?.('set className', element, nextClassName)
 					element.className = nextClassName
 				})
+				cleanedBy(element, stop)
+				continue
 			}
 			if (key === 'style') {
 				const getter = valuedAttributeGetter(value)
-				return effect(function styleEffect() {
+				const stop = effect(function styleEffect() {
 					const computedStyles = styles(getter() as StyleInput)
 					applyStyleProperties(computedStyles)
 				})
+				cleanedBy(element, stop)
+				continue
 			}
 			if (isObject(value) && value !== null && 'get' in value && 'set' in value) {
 				const binding = value as {
@@ -236,15 +216,18 @@ export const h = (tag: any, props: Record<string, any> = {}, ...children: Child[
 							break
 					}
 				}
-				return () => {
+				cleanedBy(element, () => {
 					setHtmlProperty(key, undefined)
 					for (const stop of runCleanup) stop()
-				}
+				})
+				continue
 			}
 			if (isFunction(value)) {
-				return namedEffect(`prop:${key}`, () => {
+				const stop = namedEffect(`prop:${key}`, () => {
 					setHtmlProperty(key, value())
 				})
+				cleanedBy(element, stop)
+				continue
 			}
 			if (key === 'innerHTML') {
 				if (value !== undefined) {
@@ -252,15 +235,16 @@ export const h = (tag: any, props: Record<string, any> = {}, ...children: Child[
 					testing.renderingEvent?.('set innerHTML', element, htmlValue)
 					element.innerHTML = htmlValue
 				}
-				return () => {
+				cleanedBy(element, () => {
 					element.innerHTML = ''
-				}
+				})
+				continue
 			}
 			setHtmlProperty(key, value)
-			return () => {
+			cleanedBy(element, () => {
 				setHtmlProperty(key, undefined)
-			}
-		})
+			})
+		}
 
 		// Create plain HTML element - also return mount object for consistency
 		mountObject = {
@@ -310,14 +294,19 @@ const intrinsicComponentAliases = extend(null, {
 		const body = Array.isArray(props.children) ? props.children[0] : props.children
 		const cb = body() as (item: T, oldItem?: JSX.Element) => JSX.Element
 		const memoized = memoize(cb as (item: T & object) => JSX.Element)
-		const array = isNonReactive(props.each)
-			? props.each.map((item) => cb(item))
-			: (project(props.each, ({ value: item, old }) => {
-					return isObject(item) || isSymbol(item) || isFunction(item)
-						? memoized(item as T & object)
-						: cb(item, old as JSX.Element | undefined)
-				}) as readonly JSX.Element[])
-		return forward('for', array, scope)
+		const eachGetter = memoize(() => (props as any).each as readonly T[] | undefined)
+		const compute = memoize(() => {
+			const each = eachGetter()
+			if (!each) return [] as readonly JSX.Element[]
+			return isNonReactive(each)
+				? (each.map((item) => cb(item)) as readonly JSX.Element[])
+				: (project(each, ({ value: item, old }) => {
+						return isObject(item) || isSymbol(item) || isFunction(item)
+							? memoized(item as T & object)
+							: cb(item, old as JSX.Element | undefined)
+					}) as readonly JSX.Element[])
+		})
+		return forward('for', [compute as any] as any, scope)
 	},
 })
 export const Fragment = (props: { children: JSX.Element[] }, scope: Scope) =>
@@ -392,7 +381,7 @@ const render = memoize((renderer: JSX.Element, scope: Scope) => {
 	const partial = renderer.render(scope)
 	if (renderer.mount)
 		for (const mount of renderer.mount)
-			effect(() => untracked(() => mount(partial)))
+			untracked(() => mount(partial))
 	if (renderer.use)
 		for (const [key, value] of Object.entries(renderer.use) as [string, any])
 			effect(() => {
