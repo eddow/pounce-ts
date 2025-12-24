@@ -7,7 +7,7 @@ This page contains complete, working examples demonstrating various features of 
 A simple counter with increment and decrement buttons:
 
 ```tsx
-import { reactive } from 'mutts/src'
+import { reactive } from 'mutts'
 import { bindApp } from '../lib/renderer'
 
 function Counter() {
@@ -39,7 +39,7 @@ bindApp(<Counter />)
 A complete todo list with add, delete, and filter functionality:
 
 ```tsx
-import { reactive, computed } from 'mutts/src'
+import { reactive, computed } from 'mutts'
 import { bindApp } from '../lib/renderer'
 import { array } from '../lib/utils'
 
@@ -155,7 +155,7 @@ bindApp(<TodoApp />)
 A form with real-time validation:
 
 ```tsx
-import { reactive, computed } from 'mutts/src'
+import { reactive, computed } from 'mutts'
 import { bindApp } from '../lib/renderer'
 
 function FormApp() {
@@ -268,7 +268,7 @@ bindApp(app)
 A search input with debounced results:
 
 ```tsx
-import { reactive, computed, watch } from 'mutts/src'
+import { reactive, computed, watch } from 'mutts'
 import { bindApp } from '../lib/renderer'
 
 function SearchApp() {
@@ -328,7 +328,7 @@ bindApp(app)
 A shopping cart with quantity management:
 
 ```tsx
-import { reactive, computed } from 'mutts/src'
+import { reactive, computed } from 'mutts'
 import { bindApp } from '../lib/renderer'
 
 interface CartItem {
@@ -405,7 +405,7 @@ bindApp(app)
 A tabbed interface with content switching:
 
 ```tsx
-import { reactive } from 'mutts/src'
+import { reactive } from 'mutts'
 import { bindApp } from '../lib/renderer'
 
 function TabbedInterface() {
@@ -451,7 +451,7 @@ bindApp(app)
 A complete task management application combining multiple features:
 
 ```tsx
-import { reactive, computed, effect } from 'mutts/src'
+import { reactive, computed, effect } from 'mutts'
 import { bindApp } from '../lib/renderer'
 import { array } from '../lib/utils'
 

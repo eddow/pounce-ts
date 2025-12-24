@@ -1,4 +1,4 @@
-import {} from 'mutts/src'
+import {} from 'mutts'
 
 const NAME_SPACED_SYMBOL = Symbol.for('pounceTS.nameSpaced')
 // TODO: check and fix the given prop with namespaced parts - which comes first, how it ends up

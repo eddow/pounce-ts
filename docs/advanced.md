@@ -402,7 +402,7 @@ function DynamicComponent(props: Record<string, any>) {
 Use `memoize` for expensive calculations:
 
 ```tsx
-import { memoize } from 'mutts/src'
+import { memoize } from 'mutts'
 
 function ExpensiveList(props: { items: Item[] }) {
   const processed = memoize(() => props.items.map(expensiveProcess))
@@ -420,7 +420,7 @@ function ExpensiveList(props: { items: Item[] }) {
 Use `effect` for fine-grained control:
 
 ```tsx
-import { effect, reactive } from 'mutts/src'
+import { effect, reactive } from 'mutts'
 
 function ControlledComponent() {
   const shouldUpdate = reactive({ value: true })

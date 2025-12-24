@@ -1,7 +1,7 @@
 /**
  * Main entry point for Pounce-TS application
  */
-import { effect, isFunction, project, reactive, trackEffect } from 'mutts/src'
+import { effect, isFunction, project, reactive, trackEffect } from 'mutts'
 import { bindApp, compose, Scope } from './lib'
 
 function ResizeSandbox(_props: {}, scope: Scope) {

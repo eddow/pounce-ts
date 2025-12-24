@@ -2,7 +2,7 @@
  * Main entry point for Pounce-TS application
  */
 
-import { reactive } from 'mutts/src'
+import { reactive } from 'mutts'
 import CounterComponent from './components/Counter'
 import TodoComponent from './components/Todo'
 import WrapperComponent from './components/Wrapper'

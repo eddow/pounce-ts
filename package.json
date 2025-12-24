@@ -69,6 +69,6 @@
     "vite-plugin-babel": "^1.3.2"
   },
   "dependencies": {
-    "mutts": "file:../mutts"
+    "mutts": "workspace:*"
   }
 }

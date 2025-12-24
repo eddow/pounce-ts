@@ -2,7 +2,7 @@
  * Todo Web Component using inline JSX templating
  */
 
-import { effect, memoize } from 'mutts/src'
+import { effect, memoize } from 'mutts'
 import './Todo.scss'
 import { array, compose } from '../lib/utils'
 import { Scope } from '../lib'

@@ -1,4 +1,4 @@
-import { reactive } from 'mutts/src'
+import { reactive } from 'mutts'
 
 type ChildNode = {
 	id: number

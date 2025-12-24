@@ -1,4 +1,4 @@
-import { reactive, effect } from 'mutts/src'
+import { reactive, effect } from 'mutts'
 import { Scope } from '../../src'
 
 type Role = 'guest' | 'member' | 'admin'
@@ -218,7 +218,7 @@ function ForListDemo(_: any, scope: Scope) {
 		}
 		node.dataset.id = String(value.id)
 		node.dataset.label = value.label
-		return () => {}
+		return () => { }
 	}
 	return (
 		<section data-testid="for-demo">

@@ -54,7 +54,7 @@ npm run build
 Here's a simple counter component:
 
 ```tsx
-import { reactive } from 'mutts/src'
+import { reactive } from 'mutts'
 import { bindApp } from './lib/renderer'
 
 function Counter() {

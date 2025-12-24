@@ -52,7 +52,7 @@ npm run build
 Create a file `src/app.tsx`:
 
 ```tsx
-import { reactive } from 'mutts/src'
+import { reactive } from 'mutts'
 import { bindApp } from './lib/renderer'
 
 // Create reactive state
@@ -111,7 +111,7 @@ function Greeting(props: { name: string }) {
 Use `reactive()` from `mutts` to create reactive state:
 
 ```tsx
-import { reactive } from 'mutts/src'
+import { reactive } from 'mutts'
 
 const state = reactive({
   count: 0,

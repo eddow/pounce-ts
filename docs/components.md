@@ -139,7 +139,7 @@ function TodoList(props: {
 Use `effect()` from `mutts` for lifecycle hooks:
 
 ```tsx
-import { effect } from 'mutts/src'
+import { effect } from 'mutts'
 
 function MyComponent() {
   // Component mounted
@@ -163,7 +163,7 @@ function MyComponent() {
 Use `trackEffect()` to monitor reactive changes:
 
 ```tsx
-import { trackEffect } from 'mutts/src'
+import { trackEffect } from 'mutts'
 
 function MyComponent() {
   trackEffect((obj, evolution) => {

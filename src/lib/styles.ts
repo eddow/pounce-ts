@@ -1,4 +1,4 @@
-import { isObject, isString } from 'mutts/src'
+import { isObject, isString } from 'mutts'
 
 /**
  * Utility for generating CSS class names

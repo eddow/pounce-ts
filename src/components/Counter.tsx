@@ -2,7 +2,7 @@
  * Counter Web Component using inline JSX templating (functional standard)
  */
 
-import { effect, trackEffect, watch } from 'mutts/src'
+import { effect, trackEffect, watch } from 'mutts'
 import './Counter.scss'
 import { compose, Scope } from '../lib'
 

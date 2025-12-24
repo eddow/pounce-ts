@@ -1,4 +1,4 @@
-import { reactive } from 'mutts/src'
+import { reactive } from 'mutts'
 
 const state = reactive({
 	value: 'initial',
@@ -28,7 +28,7 @@ const BindingFixtureApp = () => (
 	<main>
 		<h1>2-Way Binding Fixture</h1>
 		<p>Test 2-way binding with inputs and display</p>
-		
+
 		<section class="controls">
 			<button data-action="reset" onClick={() => fixtureControls.reset()}>
 				Reset
@@ -39,7 +39,7 @@ const BindingFixtureApp = () => (
 			<div data-testid="binding-display" style="margin: 20px 0; padding: 10px; border: 1px solid #ccc;">
 				Current value: <strong>{state.value}</strong>
 			</div>
-			
+
 			<div data-testid="binding-inputs" style="display: flex; gap: 20px; flex-direction: column;">
 				<div>
 					<label>Input 1:</label>

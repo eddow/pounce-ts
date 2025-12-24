@@ -9,7 +9,7 @@ Pounce-TS uses the `mutts` reactivity engine to automatically track dependencies
 Use `reactive()` to create reactive state:
 
 ```tsx
-import { reactive } from 'mutts/src'
+import { reactive } from 'mutts'
 
 const state = reactive({
   count: 0,
@@ -37,7 +37,7 @@ state.items.push(item)  // Triggers re-render
 Use `memoize()` to create derived values:
 
 ```tsx
-import { memoize } from 'mutts/src'
+import { memoize } from 'mutts'
 
 const state = reactive({
   firstName: 'John',
@@ -55,7 +55,7 @@ const fullName = memoize(() => `${state.firstName} ${state.lastName}`)
 Map over arrays reactively with `mapped`:
 
 ```tsx
-import { mapped } from 'mutts/src'
+import { mapped } from 'mutts'
 
 const todos = reactive([
   { id: 1, text: 'Task 1', done: false },
@@ -77,7 +77,7 @@ const todos = reactive([
 Filter arrays reactively:
 
 ```tsx
-import { memoize, mapped } from 'mutts/src'
+import { memoize, mapped } from 'mutts'
 
 const activeTodos = memoize(() => todos.filter(t => !t.done))
 
@@ -91,7 +91,7 @@ const activeTodos = memoize(() => todos.filter(t => !t.done))
 Use `effect()` to perform side effects when reactive values change:
 
 ```tsx
-import { effect } from 'mutts/src'
+import { effect } from 'mutts'
 
 effect(() => {
   console.log('Count changed to:', state.count)
@@ -112,7 +112,7 @@ For development-time tracing, see debug utilities; production code should use `e
 Use `watch()` to observe specific values:
 
 ```tsx
-import { watch } from 'mutts/src'
+import { watch } from 'mutts'
 
 watch(() => state.count, (newValue, oldValue) => {
   console.log(`Count changed from ${oldValue} to ${newValue}`)

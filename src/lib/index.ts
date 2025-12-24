@@ -1,4 +1,4 @@
-import { effect, isFunction, isString, ScopedCallback } from 'mutts/src'
+import { effect, isFunction, isString, ScopedCallback } from 'mutts'
 import { testing } from './debug'
 import { bindChildren, Fragment, h, rootScope } from './renderer'
 

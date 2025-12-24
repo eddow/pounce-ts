@@ -1,4 +1,4 @@
-import { isFunction, isObject, memoize, reactive } from 'mutts/src'
+import { isFunction, isObject, memoize, reactive } from 'mutts'
 
 type AllOptional<T> = {
 	[K in keyof T as undefined extends T[K] ? K : never]-?: T[K]

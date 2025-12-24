@@ -1,4 +1,4 @@
-import { ScopedCallback } from 'mutts/src'
+import { ScopedCallback } from 'mutts'
 import { Scope } from 'src/lib'
 import type { NameSpacedProps } from '../lib/namespaced'
 import type { StyleInput } from '../lib/styles'

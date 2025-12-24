@@ -290,7 +290,7 @@ function ValidatedInput() {
 ### Debounced Input
 
 ```tsx
-import { effect, watch } from 'mutts/src'
+import { effect, watch } from 'mutts'
 
 function DebouncedSearch() {
   const state = reactive({ 

@@ -1,4 +1,4 @@
-import { reactive } from 'mutts/src'
+import { reactive } from 'mutts'
 import { bindApp } from '../../src/lib/index.ts'
 import { testing } from '../../src/lib/debug'
 
@@ -49,29 +49,29 @@ async function loadFixtureFixture() {
 
 	state.loading = true
 	state.error = null
-	
-    try {
-        // Dynamically import the fixture component via Vite glob for reliability
-        const fixtures = import.meta.glob('./*Tests.tsx') as Record<string, () => Promise<{ default: any }>>
-        const loader = fixtures[`./${hash}Tests.tsx`]
-        window.__fixturesList = Object.keys(fixtures)
-        if (!loader) {
-            state.component = <div>Fixture {hash} not found</div>
-            state.error = `No fixture loader for ./${hash}Tests.tsx`
-            state.loading = false
-            return
-        }
-        const timeout = new Promise<never>((_, rej) => setTimeout(() => rej(new Error('fixture load timeout')), 15000))
-        const fixtureModule = await Promise.race([loader(), timeout])
-        const FixtureComponent = fixtureModule.default
-		
+
+	try {
+		// Dynamically import the fixture component via Vite glob for reliability
+		const fixtures = import.meta.glob('./*Tests.tsx') as Record<string, () => Promise<{ default: any }>>
+		const loader = fixtures[`./${hash}Tests.tsx`]
+		window.__fixturesList = Object.keys(fixtures)
+		if (!loader) {
+			state.component = <div>Fixture {hash} not found</div>
+			state.error = `No fixture loader for ./${hash}Tests.tsx`
+			state.loading = false
+			return
+		}
+		const timeout = new Promise<never>((_, rej) => setTimeout(() => rej(new Error('fixture load timeout')), 15000))
+		const fixtureModule = await Promise.race([loader(), timeout])
+		const FixtureComponent = fixtureModule.default
+
 		if (!FixtureComponent) {
 			state.component = <div>Fixture {hash} has no default export</div>
 			state.error = `No default export in ${hash}Tests.tsx`
 			state.loading = false
 			return
 		}
-		
+
 		// Render with For and Scope available in global scope
 		state.component = <FixtureComponent />
 		state.error = null
@@ -93,7 +93,7 @@ const TestRouter = () => {
 	if (state.loading) {
 		return <div>Loading fixture...</div>
 	}
-	
+
 	if (state.error) {
 		return (
 			<div>
@@ -101,7 +101,7 @@ const TestRouter = () => {
 			</div>
 		)
 	}
-	
+
 	return state.component || <div>Initializing...</div>
 }
 

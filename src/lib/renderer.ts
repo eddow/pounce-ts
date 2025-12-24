@@ -15,7 +15,7 @@ import {
 	reduced,
 	untracked,
 	unwrap,
-} from 'mutts/src'
+} from 'mutts'
 import { namedEffect, testing } from './debug'
 import { restructureProps } from './namespaced'
 import { ClassInput, classNames, StyleInput, styles } from './styles'
