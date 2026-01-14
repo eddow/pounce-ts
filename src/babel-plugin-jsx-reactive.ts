@@ -244,7 +244,7 @@ export function babelPluginJsxReactive({
 									if (t.isTSAsExpression(expression)) {
 										innerExpression = expression.expression
 									}
-									if (t.isMemberExpression(innerExpression) || t.isIdentifier(innerExpression)) {
+									if (t.isMemberExpression(innerExpression)) {
 										// Auto-detect 2-way binding: transform `{this.count}`, `{state.count}`, or `{state['count']}` to `{{get: () => this.count, set: (val) => this.count = val}}`
 										// For type assertions, use the original expression in getter (with cast) but inner expression in setter (without cast)
 										const getter = t.arrowFunctionExpression([], expression)

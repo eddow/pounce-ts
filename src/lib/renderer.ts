@@ -78,6 +78,9 @@ export const h = (tag: any, props: Record<string, any> = {}, ...children: Child[
 				break
 			}
 			case 'use': {
+				// The babel plugin automatically wraps the handler: `use={fn}` -> `use={() => fn}`.
+				// We execute the wrapper to get the actual handler.
+				// Users should NOT wrap it manually.
 				const mountEntry = valuedAttributeGetter(value)()
 				if (mountEntry !== undefined) {
 					categories.mount = [mountEntry, ...(categories.mount || [])]
@@ -113,9 +116,11 @@ export const h = (tag: any, props: Record<string, any> = {}, ...children: Child[
 				const rendered = project.array([null], () => {
 					testing.renderingEvent?.('render component', componentCtor.name)
 					const givenProps = reactive(propsInto(regularProps, { children }))
-					return untracked(() => componentCtor(restructureProps(givenProps), childScope))
+					const result = untracked(() => componentCtor(restructureProps(givenProps), childScope))
+					return result
 				})
-				return processChildren(rendered, childScope)
+				const processedChildren = processChildren(rendered, childScope)
+				return processedChildren
 			},
 		}
 	} else {
@@ -379,9 +384,11 @@ export type Intermediates = NodeDesc | NodeDesc[]
 
 const render = memoize((renderer: JSX.Element, scope: Scope) => {
 	const partial = renderer.render(scope)
-	if (renderer.mount)
-		for (const mount of renderer.mount)
+	if (renderer.mount) {
+		for (const mount of renderer.mount) {
 			untracked(() => mount(partial))
+		}
+	}
 	if (renderer.use)
 		for (const [key, value] of Object.entries(renderer.use) as [string, any])
 			effect(() => {
@@ -401,8 +408,10 @@ const render = memoize((renderer: JSX.Element, scope: Scope) => {
  * Returns a flat array of DOM nodes suitable for replaceChildren()
  */
 export function processChildren(children: readonly Child[], scope: Scope): readonly Node[] {
+	//console.log('[pounce:processChildren] Called with children:', children, 'length:', children?.length)
 	const renderers = project(children, ({ get }) => {
 		const child = get()
+		//console.log('[pounce:processChildren:project] Processing child:', child, 'isFunction?', isFunction(child), 'isElement?', isElement(child))
 		return isFunction(child) ? (child as () => Intermediates)() : child
 	})
 	const conditioned = reduced(renderers, (child, previous: { had?: true }) => {
@@ -426,7 +435,9 @@ export function processChildren(children: readonly Child[], scope: Scope): reado
 	const rendered = project(
 		conditioned,
 		({ value: partial }): Node | readonly Node[] | false | undefined => {
+			//console.log('[pounce:processChildren:render] Processing partial:', partial, 'isElement?', isElement(partial))
 			const nodes = isElement(partial) ? render(partial, scope) : partial
+			//console.log('[pounce:processChildren:render] After render:', nodes)
 			if (!nodes && !isNumber(nodes)) return
 			if (Array.isArray(nodes)) return processChildren(nodes, scope)
 			else if (nodes instanceof Node) return unwrap(nodes)

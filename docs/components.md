@@ -281,6 +281,10 @@ Attach an inline mount callback without defining a mixin on `scope`.
 - `target`: `Node | Node[]` — the rendered target. Intrinsic elements receive a single `Node`. Components may yield a `Node` or `Node[]`.
 - `scope`: the current reactive scope object.
 
+> **Important**: The Pounce-TS Babel plugin **automatically transforms** `use={handler}` into `use={() => handler}`.
+> You should **NOT** write `use={() => handler}` manually, as this would result in a double-wrapped function (`() => () => handler`) which will not work as expected.
+> Simply assign your handler function directly to the `use` attribute.
+
 Example:
 
 ```tsx
