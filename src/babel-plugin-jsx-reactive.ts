@@ -3,6 +3,11 @@ import { type JSXElement } from '@babel/types'
 
 interface BabelPluginOptions {
 	types: typeof t
+	/**
+	 * The project root directory where src/lib/utils is located.
+	 * Defaults to 'pounce-ts' if not provided.
+	 */
+	projectRoot?: string
 }
 
 interface BabelPluginState {
@@ -44,15 +49,26 @@ function computeRelativeImport(fromFilename: string, targetFilename: string): st
 	return relativePath.startsWith('.') ? relativePath : `./${relativePath}`
 }
 
-function resolveTargetPath(filename: string | undefined, cwd: string | undefined): string | null {
-	if (!filename || !cwd) return null
+function resolveTargetPath(
+	filename: string | undefined,
+	projectRoot: string | undefined
+): string | null {
+	if (!filename) return null
+	
+	// Default: import from the package (for external projects like pounce-ui, browser-pounce)
+	if (!projectRoot) {
+		return 'pounce-ts'
+	}
+	
+	// When projectRoot is provided (by pounce-ts itself), use relative path to src/lib/utils
 	const normalizedFilename = toPosixPath(filename)
-	const normalizedTarget = toPosixPath(`${cwd}/src/lib/utils`)
+	const normalizedTarget = toPosixPath(`${projectRoot}/src/lib/utils`)
 	return computeRelativeImport(normalizedFilename, normalizedTarget)
 }
 
 export function babelPluginJsxReactive({
 	types: t,
+	projectRoot,
 }: BabelPluginOptions): PluginObj<BabelPluginState> {
 	const EXTENDS_HELPERS = new Set(['_extends', '__assign'])
 
@@ -80,8 +96,7 @@ export function babelPluginJsxReactive({
 		)
 		if (alreadyImported) return
 		const filename = state.file?.opts.filename
-		const cwd = state.file?.opts?.cwd
-		const composeSource = resolveTargetPath(filename, cwd) ?? 'src/lib/utils'
+		const composeSource = resolveTargetPath(filename, projectRoot) ?? 'src/lib/utils'
 		const normalizedSource = composeSource === './' ? './utils' : composeSource
 		const importDeclaration = t.importDeclaration(
 			[t.importSpecifier(t.identifier('compose'), t.identifier('compose'))],
@@ -164,7 +179,7 @@ export function babelPluginJsxReactive({
 							const local = attr.name.name.name
 							if (ns === 'update') {
 								const baseIndex = attrs.findIndex(
-									(a) => t.isJSXAttribute(a) && t.isJSXIdentifier(a.name) && a.name.name === local
+									(a: t.JSXAttribute | t.JSXSpreadAttribute) => t.isJSXAttribute(a) && t.isJSXIdentifier(a.name) && a.name.name === local
 								)
 								if (baseIndex !== -1) {
 									const baseAttr = attrs[baseIndex] as t.JSXAttribute
@@ -244,7 +259,22 @@ export function babelPluginJsxReactive({
 									if (t.isTSAsExpression(expression)) {
 										innerExpression = expression.expression
 									}
-									if (t.isMemberExpression(innerExpression)) {
+									if (t.isJSXIdentifier(attr.name) && attr.name.name === 'this') {
+										// Special 'this' attribute: transform `this={expr}` to `{ set: (v) => expr = v }`
+										if (!t.isLVal(innerExpression)) {
+											throw path.buildCodeFrameError(
+												`[jsx-reactive] The value of 'this' attribute must be an assignable expression (LVal), got ${innerExpression.type}`
+											)
+										}
+										const setter = t.arrowFunctionExpression(
+											[t.identifier('v')],
+											t.assignmentExpression('=', innerExpression as t.LVal, t.identifier('v'))
+										)
+										const bindingObject = t.objectExpression([
+											t.objectProperty(t.identifier('set'), setter),
+										])
+										attr.value = t.jsxExpressionContainer(bindingObject)
+									} else if (t.isMemberExpression(innerExpression)) {
 										// Auto-detect 2-way binding: transform `{this.count}`, `{state.count}`, or `{state['count']}` to `{{get: () => this.count, set: (val) => this.count = val}}`
 										// For type assertions, use the original expression in getter (with cast) but inner expression in setter (without cast)
 										const getter = t.arrowFunctionExpression([], expression)

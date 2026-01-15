@@ -17,12 +17,11 @@ const state = reactive({
 // biome-ignore lint/style/useConst: set in the props
 let todos = reactive([])
 // Build the app virtual tree and render to a DocumentFragment
-/*const refs = {
+const refs = reactive({
 	input: undefined as HTMLInputElement | undefined,
 	counter: undefined as Node | readonly Node[] | undefined,
 	todos: undefined as Node | readonly Node[] | undefined,
-}*/
-const refs: Record<string, Node | Node[]> = {}
+})
 console.log('refs', refs)
 const App = () => (
 	<>

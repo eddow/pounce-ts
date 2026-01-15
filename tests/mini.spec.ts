@@ -15,20 +15,25 @@ test.describe('Mini demo', () => {
 		const firstValue = await miniInput.inputValue()
 		await miniRoot.locator('button.add').click()
 
-		const listDisplay = miniRoot.locator('> div').first().locator('span')
-		await expect(listDisplay).toContainText(firstValue)
+		// List items are rendered as buttons with class "remove"
+		const listItems = miniRoot.locator('button.remove')
+		await expect(listItems).toHaveCount(1)
+		await expect(listItems.first()).toContainText(firstValue)
 
 		await miniInput.fill('Custom entry')
 		await miniRoot.locator('button.add').click()
-		await expect(listDisplay).toContainText('Custom entry')
+		await expect(listItems).toHaveCount(2)
+		await expect(listItems.nth(1)).toContainText('Custom entry')
 
 		const removeAllButton = miniRoot.locator('button.remove-all')
 		await expect(removeAllButton).toBeVisible()
 		await removeAllButton.click()
+		// Wait a moment for reactivity to process
+		await page.waitForTimeout(100)
 		// After clearing, the display updates and button hides
 		await expect(removeAllButton).toBeHidden()
-		// The list display may be empty or show empty state
-		await expect(miniRoot.locator('> div').first().locator('span')).toHaveCount(1)
+		// All list items should be removed
+		await expect(listItems).toHaveCount(0)
 	})
 
 	test('resize sandbox renders helper copy', async ({ page }) => {

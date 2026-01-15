@@ -41,11 +41,12 @@ export default defineConfig({
 				
 				const result = transformSync(code, {
 					filename: id,
+					cwd: projectRootDir,
 					babelrc: false,
 					configFile: false,
 					plugins: [
-						babelPluginJsxReactive,
-						['@babel/plugin-proposal-decorators', { version: '2023-05' }],
+					[babelPluginJsxReactive, { projectRoot: projectRootDir }],
+					['@babel/plugin-proposal-decorators', { version: '2023-05' }],
 						[
 							'@babel/plugin-transform-react-jsx',
 							{

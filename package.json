@@ -69,6 +69,7 @@
     "vite-plugin-babel": "^1.3.2"
   },
   "dependencies": {
+    "@babel/types": "^7.28.6",
     "dockview-core": "^4.13.1",
     "mutts": "link:../mutts"
   },

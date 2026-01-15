@@ -95,20 +95,18 @@ window.__rendererControls = controls
 let nextListInstance = 1
 
 function DynamicDemo() {
-	let tag: keyof HTMLElementTagNameMap | ComponentFunction
-	if (state.dynamicAsComponent) tag = state.dynamicTag as ComponentFunction
-	else tag = state.dynamicElementTag
-	const kind = state.dynamicAsComponent ? 'component' : state.dynamicElementTag
 	return (
 		<section data-testid="dynamic-demo">
 			<dynamic
-				tag={tag}
+				tag={state.dynamicAsComponent ? (state.dynamicTag as ComponentFunction) : state.dynamicElementTag}
 				class="dynamic-root"
 				data-testid="dynamic-root"
-				data-kind={kind}
+				data-kind={state.dynamicAsComponent ? 'component' : state.dynamicElementTag}
 				is={state.dynamicIs}
 			>
-				<span data-testid="dynamic-label">{kind}</span>
+				<span data-testid="dynamic-label">
+					{state.dynamicAsComponent ? 'component' : state.dynamicElementTag}
+				</span>
 			</dynamic>
 			<p data-testid="dynamic-mode">{state.dynamicAsComponent ? 'component' : 'element'}</p>
 			<p data-testid="dynamic-is-value">{state.dynamicIs}</p>

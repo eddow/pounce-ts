@@ -1,8 +1,16 @@
-import { effect, isFunction, isString, ScopedCallback } from 'mutts'
+import { effect, ScopedCallback } from 'mutts'
 import { testing } from './debug'
-import { bindChildren, Fragment, h, rootScope } from './renderer'
+import { bindChildren, Fragment, h, rootScope, type Scope } from './renderer'
 
-export { bindChildren, Fragment, h, type Scope } from './renderer'
+function isFunction(value: any): value is Function {
+	return typeof value === 'function'
+}
+
+function isString(value: any): value is string {
+	return typeof value === 'string'
+}
+
+export { bindChildren, Fragment, h, type Scope }
 export * from './utils'
 
 const applicationRoots = new WeakMap<HTMLElement, ScopedCallback>()

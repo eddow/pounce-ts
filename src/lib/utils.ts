@@ -1,4 +1,19 @@
-import { isFunction, isObject, memoize, reactive } from 'mutts'
+import { memoize, reactive } from 'mutts'
+
+// Local implementations to avoid circular reference issues with mutts lazy-get
+function isFunction(value: any): value is Function {
+	return typeof value === 'function'
+}
+
+function isObject(value: any): value is object {
+	return typeof value === 'object' && value !== null
+}
+
+function isPlainObject(value: any): value is object {
+	if (!isObject(value)) return false
+	const proto = Object.getPrototypeOf(value)
+	return proto === null || proto === Object.prototype
+}
 
 type AllOptional<T> = {
 	[K in keyof T as undefined extends T[K] ? K : never]-?: T[K]
@@ -127,10 +142,18 @@ export interface Compose {
 }
 
 export const compose: Compose = (...args: readonly ComposeArgument[]): Record<string, any> => {
+	// Pre-process arguments to make plain objects reactive
+	const reactiveArgs = args.map((arg) => {
+		if (isPlainObject(arg)) {
+			return reactive(arg)
+		}
+		return arg
+	})
+
 	return new Proxy(Object.create(null), {
 		get(_, prop, receiver) {
-			for (let i = args.length - 1; i >= 0; i--) {
-				const arg = args[i]
+			for (let i = reactiveArgs.length - 1; i >= 0; i--) {
+				const arg = reactiveArgs[i]
 				const source = isFunction(arg) ? arg(receiver) : arg
 				if (isObject(source) && prop in source) {
 					return (source as any)[prop]
@@ -139,8 +162,8 @@ export const compose: Compose = (...args: readonly ComposeArgument[]): Record<st
 			return undefined
 		},
 		set(_, prop, value, receiver) {
-			for (let i = args.length - 1; i >= 0; i--) {
-				const arg = args[i]
+			for (let i = reactiveArgs.length - 1; i >= 0; i--) {
+				const arg = reactiveArgs[i]
 				const source = isFunction(arg) ? arg(receiver) : arg
 				if (isObject(source) && prop in source) {
 					;(source as any)[prop] = value
@@ -150,8 +173,8 @@ export const compose: Compose = (...args: readonly ComposeArgument[]): Record<st
 			return false
 		},
 		has(_, prop) {
-			for (let i = args.length - 1; i >= 0; i--) {
-				const arg = args[i]
+			for (let i = reactiveArgs.length - 1; i >= 0; i--) {
+				const arg = reactiveArgs[i]
 				const source = isFunction(arg) ? arg({}) : arg
 				if (isObject(source) && prop in source) return true
 			}
@@ -159,7 +182,7 @@ export const compose: Compose = (...args: readonly ComposeArgument[]): Record<st
 		},
 		ownKeys() {
 			const keys = new Set<string | symbol>()
-			for (const arg of args) {
+			for (const arg of reactiveArgs) {
 				const source = isFunction(arg) ? arg({}) : arg
 				if (isObject(source)) {
 					for (const key of Reflect.ownKeys(source)) {
@@ -172,8 +195,8 @@ export const compose: Compose = (...args: readonly ComposeArgument[]): Record<st
 			return Array.from(keys)
 		},
 		getOwnPropertyDescriptor(_, prop) {
-			for (let i = args.length - 1; i >= 0; i--) {
-				const arg = args[i]
+			for (let i = reactiveArgs.length - 1; i >= 0; i--) {
+				const arg = reactiveArgs[i]
 				const source = isFunction(arg) ? arg({}) : arg
 				if (isObject(source) && prop in source) {
 					const desc = Reflect.getOwnPropertyDescriptor(source, prop)

@@ -1,8 +1,12 @@
 /**
  * Main entry point for Pounce-TS application
  */
-import { effect, isFunction, project, reactive, trackEffect } from 'mutts'
+import { effect, project, reactive, trackEffect } from 'mutts'
 import { bindApp, compose, Scope } from './lib'
+
+function isFunction(value: any): value is Function {
+	return typeof value === 'function'
+}
 
 function ResizeSandbox(_props: {}, scope: Scope) {
 	const size = reactive({ width: 0, height: 0 })
@@ -71,7 +75,7 @@ function MiniCounter(
 		state.addedText = Date.now().toString()
 	}
 	function removeAll() {
-		state.list.length = 0
+		state.list.splice(0)
 	}
 	return (
 		<>

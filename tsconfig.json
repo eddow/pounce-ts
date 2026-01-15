@@ -1,15 +1,31 @@
 {
 	"compilerOptions": {
 		"target": "ES2022",
-		"lib": ["ES2022", "DOM", "DOM.Iterable"],
+		"lib": [
+			"ES2023",
+			"DOM",
+			"DOM.Iterable"
+		],
 		"module": "ESNext",
 		"skipLibCheck": false,
 		"moduleResolution": "bundler",
 		"baseUrl": ".",
 		"paths": {
-			"@pounce/runtime/jsx-runtime": ["src/runtime/jsx-runtime.ts"],
-			"@pounce/runtime/jsx-dev-runtime": ["src/runtime/jsx-dev-runtime.ts"],
-			"@pounce/runtime": ["src/index.d.ts"]
+			"mutts": [
+				"../mutts/src/index.ts"
+			],
+			"mutts/*": [
+				"../mutts/src/*"
+			],
+			"@pounce/runtime/jsx-runtime": [
+				"src/runtime/jsx-runtime.ts"
+			],
+			"@pounce/runtime/jsx-dev-runtime": [
+				"src/runtime/jsx-dev-runtime.ts"
+			],
+			"@pounce/runtime": [
+				"src/index.d.ts"
+			]
 		},
 		"allowImportingTsExtensions": true,
 		"resolveJsonModule": true,
@@ -29,7 +45,19 @@
 		"esModuleInterop": true,
 		"forceConsistentCasingInFileNames": true
 	},
-	"include": ["src/**/*", "tests/**/*.ts", "tests/**/*.tsx", "sandbox/**/*.ts", "sandbox/**/*.tsx"],
-	"exclude": ["../mutts/**/*"],
-	"references": [{ "path": "./tsconfig.node.json" }]
+	"include": [
+		"src/**/*",
+		"tests/**/*.ts",
+		"tests/**/*.tsx",
+		"sandbox/**/*.ts",
+		"sandbox/**/*.tsx"
+	],
+	"exclude": [
+		"../mutts/**/*"
+	],
+	"references": [
+		{
+			"path": "./tsconfig.node.json"
+		}
+	]
 }

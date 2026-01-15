@@ -1,0 +1,147 @@
+
+Running 4 tests using 1 worker
+
+  ✓  1 [chromium] › tests/RendererFeatures.spec.ts:26:2 › Renderer features › dynamic tag selection forwards `is` and supports components (963ms)
+  ✘  2 [chromium] › tests/RendererFeatures.spec.ts:47:2 › Renderer features › `if` directives react to boolean, scope, and when conditions (5.4s)
+  ✘  3 [chromium] › tests/RendererFeatures.spec.ts:73:2 › Renderer features › `use` directives provide mount hooks and reactive mixins (5.3s)
+  ✓  4 [chromium] › tests/RendererFeatures.spec.ts:91:2 › Renderer features › `for` directive reuses instances and cleans up removed items (400ms)
+
+
+  1) [chromium] › tests/RendererFeatures.spec.ts:47:2 › Renderer features › `if` directives react to boolean, scope, and when conditions 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoHaveText[2m([22m[32mexpected[39m[2m)[22m failed
+
+    Locator: locator('[data-testid="perm-allowed"]')
+    Expected: [32m"Analytics enabled"[39m
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toHaveText" with timeout 5000ms[22m
+    [2m  - waiting for locator('[data-testid="perm-allowed"]')[22m
+
+
+      64 | 		await expect(page.locator('[data-testid="role-member"]')).toHaveText('Member area')
+      65 | 		await expect(page.locator('[data-testid="role-guest"]')).toHaveCount(0)
+    > 66 | 		await expect(permAllowed).toHaveText('Analytics enabled')
+         | 		                          ^
+      67 | 		await expect(permDenied).toHaveCount(0)
+      68 |
+      69 | 		await page.click('[data-action="role-admin"]')
+        at /home/fmdm/dev/ownk/pounce-ts/tests/RendererFeatures.spec.ts:66:29
+
+    Error Context: test-results/RendererFeatures-Renderer--a78b2-n-scope-and-when-conditions-chromium/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/RendererFeatures-Renderer--a78b2-n-scope-and-when-conditions-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/RendererFeatures-Renderer--a78b2-n-scope-and-when-conditions-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2) [chromium] › tests/RendererFeatures.spec.ts:73:2 › Renderer features › `use` directives provide mount hooks and reactive mixins 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoHaveAttribute[2m([22m[32mexpected[39m[2m)[22m failed
+
+    Locator: locator('[data-testid="use-target"]')
+    Timeout: 5000ms
+    [32m- Expected  -  1[39m
+    [31m+ Received  + 30[39m
+
+    [32m- primary[39m
+    [31m+ (...args) => {[39m
+    [31m+     const localArgs = args; //: Args = maxArgs !== undefined ? (args.slice(0, maxArgs) as Args) : args[39m
+    [31m+     if (localArgs.some(arg => !(arg && ['object', 'symbol', 'function'].includes(typeof arg)))) throw new Error('memoize expects non-null object arguments');[39m
+    [31m+     let node = cacheRoot;[39m
+    [31m+     for (const arg of localArgs) {[39m
+    [31m+       node = getBranch(node, arg);[39m
+    [31m+     }[39m
+    [31m+     dependant(node, 'memoize');[39m
+    [31m+     if ('result' in node) return node.result;[39m
+    [31m+     // Create memoize internal effect to track dependencies and invalidate cache[39m
+    [31m+     // Use untracked to prevent the effect creation from being affected by parent effects[39m
+    [31m+     node.cleanup = root(() => effect(markWithRoot(() => {[39m
+    [31m+       // Execute the function and track its dependencies[39m
+    [31m+       // The function execution will automatically track dependencies on reactive objects[39m
+    [31m+       node.result = fn(...localArgs);[39m
+    [31m+       return () => {[39m
+    [31m+         // When dependencies change, invalidate the cache[39m
+    [31m+         delete node.result;[39m
+    [31m+         touched1(node, {[39m
+    [31m+           type: 'invalidate',[39m
+    [31m+           prop: localArgs[39m
+    [31m+         }, 'memoize');[39m
+    [31m+         // Stop the internal memoize effect without recursively re-entering its own cleanup.[39m
+    [31m+         const stop = node.cleanup;[39m
+    [31m+         node.cleanup = undefined;[39m
+    [31m+         stop?.();[39m
+    [31m+       };[39m
+    [31m+     }, fnRoot)));[39m
+    [31m+     return node.result;[39m
+    [31m+   }[39m
+
+    Call log:
+    [2m  - Expect "toHaveAttribute" with timeout 5000ms[22m
+    [2m  - waiting for locator('[data-testid="use-target"]')[22m
+    [2m    9 × locator resolved to <div if="" data-mounted="yes" use:marker="primary" data-mount-count="1" data-testid="use-target" use="target => {↵        if (target.dataset.mounted !== 'yes') {↵          target.dataset.mounted = 'yes';↵          state.useMounts++;↵        }↵        target.dataset.mountCount = String(state.useMounts);↵      }" data-marker="(...args) => {↵    const localArgs = args; //: Args = maxArgs !== undefined ? (args.slice(0, maxArgs) as Args) : args↵    if (localArgs.some(arg => !(arg && ['object', 'symbol',…>…</div>[22m
+    [2m      - unexpected value "(...args) => {[22m
+    [2m    const localArgs = args; //: Args = maxArgs !== undefined ? (args.slice(0, maxArgs) as Args) : args[22m
+    [2m    if (localArgs.some(arg => !(arg && ['object', 'symbol', 'function'].includes(typeof arg)))) throw new Error('memoize expects non-null object arguments');[22m
+    [2m    let node = cacheRoot;[22m
+    [2m    for (const arg of localArgs) {[22m
+    [2m      node = getBranch(node, arg);[22m
+    [2m    }[22m
+    [2m    dependant(node, 'memoize');[22m
+    [2m    if ('result' in node) return node.result;[22m
+    [2m    // Create memoize internal effect to track dependencies and invalidate cache[22m
+    [2m    // Use untracked to prevent the effect creation from being affected by parent effects[22m
+    [2m    node.cleanup = root(() => effect(markWithRoot(() => {[22m
+    [2m      // Execute the function and track its dependencies[22m
+    [2m      // The function execution will automatically track dependencies on reactive objects[22m
+    [2m      node.result = fn(...localArgs);[22m
+    [2m      return () => {[22m
+    [2m        // When dependencies change, invalidate the cache[22m
+    [2m        delete node.result;[22m
+    [2m        touched1(node, {[22m
+    [2m          type: 'invalidate',[22m
+    [2m          prop: localArgs[22m
+    [2m        }, 'memoize');[22m
+    [2m        // Stop the internal memoize effect without recursively re-entering its own cleanup.[22m
+    [2m        const stop = node.cleanup;[22m
+    [2m        node.cleanup = undefined;[22m
+    [2m        stop?.();[22m
+    [2m      };[22m
+    [2m    }, fnRoot)));[22m
+    [2m    return node.result;[22m
+    [2m  }"[22m
+
+
+      76 | 		const target = page.locator('[data-testid="use-target"]')
+      77 | 		await expect(mounts).toHaveText('1')
+    > 78 | 		await expect(target).toHaveAttribute('data-marker', 'primary')
+         | 		                     ^
+      79 | 		await expect(page.locator('[data-testid="mixin-updates"]')).toHaveText('1')
+      80 |
+      81 | 		await page.click('[data-action="variant-next"]')
+        at /home/fmdm/dev/ownk/pounce-ts/tests/RendererFeatures.spec.ts:78:24
+
+    Error Context: test-results/RendererFeatures-Renderer--955be-t-hooks-and-reactive-mixins-chromium/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/RendererFeatures-Renderer--955be-t-hooks-and-reactive-mixins-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/RendererFeatures-Renderer--955be-t-hooks-and-reactive-mixins-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2 failed
+    [chromium] › tests/RendererFeatures.spec.ts:47:2 › Renderer features › `if` directives react to boolean, scope, and when conditions 
+    [chromium] › tests/RendererFeatures.spec.ts:73:2 › Renderer features › `use` directives provide mount hooks and reactive mixins 
+  2 passed (14.0s)
+
+To open last HTML report run:
+[36m[39m
+[36m  npx playwright show-report[39m
+[36m[39m

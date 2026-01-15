@@ -90,19 +90,17 @@ async function loadFixtureFixture() {
 }
 
 const TestRouter = () => {
-	if (state.loading) {
-		return <div>Loading fixture...</div>
-	}
-
-	if (state.error) {
-		return (
-			<div>
+	return (
+		<>
+			<div if={state.loading}>Loading fixture...</div>
+			<div else if={state.error}>
 				<p>Error: {state.error}</p>
 			</div>
-		)
-	}
-
-	return state.component || <div>Initializing...</div>
+			<div else>
+				{state.component}
+			</div>
+		</>
+	)
 }
 
 // Load fixture when hash changes

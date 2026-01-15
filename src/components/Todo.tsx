@@ -5,7 +5,7 @@
 import { effect, memoize } from 'mutts'
 import './Todo.scss'
 import { array, compose } from '../lib/utils'
-import { Scope } from '../lib'
+//import { Scope } from '../lib'
 
 interface Todo {
 	id: number
@@ -25,7 +25,7 @@ export default function TodoWebComponent(
 		filter?: 'all' | 'active' | 'completed'
 		newTodoText?: string
 	},
-	scope: Scope
+	//scope: Scope
 ) {
 	const state = compose(
 		{

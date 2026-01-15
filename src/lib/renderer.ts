@@ -3,12 +3,7 @@ import {
 	biDi,
 	cleanedBy,
 	effect,
-	isFunction,
 	isNonReactive,
-	isNumber,
-	isObject,
-	isString,
-	isSymbol,
 	memoize,
 	project,
 	reactive,
@@ -20,6 +15,26 @@ import { namedEffect, testing } from './debug'
 import { restructureProps } from './namespaced'
 import { ClassInput, classNames, StyleInput, styles } from './styles'
 import { extend, isElement, propsInto } from './utils'
+
+function isFunction(value: any): value is Function {
+	return typeof value === 'function'
+}
+
+function isNumber(value: any): value is number {
+	return typeof value === 'number'
+}
+
+function isObject(value: any): value is object {
+	return typeof value === 'object' && value !== null
+}
+
+function isString(value: any): value is string {
+	return typeof value === 'string'
+}
+
+function isSymbol(value: any): value is symbol {
+	return typeof value === 'symbol'
+}
 
 export type Scope = Record<PropertyKey, any>
 export const rootScope: Scope = reactive(Object.create(null))
@@ -61,7 +76,7 @@ export const h = (tag: any, props: Record<string, any> = {}, ...children: Child[
 		switch (key) {
 			case 'this': {
 				const setComponent = value?.set
-				if (!isFunction(setComponent)) throw new Error('`this` attribute must be an L-value')
+				if (!isFunction(setComponent)) throw new Error('`this` attribute must be an L-value (object property)')
 				const mountEntry = (v: any) => {
 					setComponent(v)
 				}
@@ -162,7 +177,7 @@ export const h = (tag: any, props: Record<string, any> = {}, ...children: Child[
 			testing.renderingEvent?.('assign style', element, computedStyles)
 			Object.assign(element.style, computedStyles)
 		}
-		for (const [key, value] of Object.entries(regularProps)) {
+		if(props) for (const [key, value] of Object.entries(props)) {
 			if (key === 'children') continue
 			const runCleanup: (() => void)[] = []
 
@@ -207,6 +222,7 @@ export const h = (tag: any, props: Record<string, any> = {}, ...children: Child[
 				if (tag === 'input') {
 					switch (element.type) {
 						case 'checkbox':
+						case 'radio':
 							if (key === 'checked')
 								runCleanup.push(listen(element, 'input', () => provide(element.checked)))
 							break
@@ -280,13 +296,15 @@ const intrinsicComponentAliases = extend(null, {
 		props: { tag: string; children?: JSX.Children } & Record<string, any>,
 		_scope: Record<PropertyKey, any>
 	) {
-		const { tag, children, ...rest } = props
-		const childArray: Child[] = Array.isArray(children)
-			? (children as unknown as Child[])
-			: children === undefined
-				? []
-				: [children as unknown as Child]
-		return h(tag, rest, ...childArray)
+		return memoize(() => {
+			const { tag, children, ...rest } = props
+			const childArray: Child[] = Array.isArray(children)
+				? (children as unknown as Child[])
+				: children === undefined
+					? []
+					: [children as unknown as Child]
+			return h(tag, rest, ...childArray).render(_scope)
+		})
 	},
 
 	for<T>(
@@ -393,7 +411,7 @@ const render = memoize((renderer: JSX.Element, scope: Scope) => {
 		for (const [key, value] of Object.entries(renderer.use) as [string, any])
 			effect(() => {
 				if (!isFunction(scope[key])) throw new Error(`${key} in scope is not a function`)
-				return scope[key](partial, value, scope)
+				return scope[key](partial, value(), scope)
 			})
 	return partial
 })
@@ -420,13 +438,13 @@ export function processChildren(children: readonly Child[], scope: Scope): reado
 			('condition' in child || 'if' in child || 'when' in child || 'else' in child)
 		) {
 			if (child.else && previous.had) return []
-			if ('condition' in child && !child.condition) return []
+			if ('condition' in child && !child.condition()) return []
 			if (child.if)
 				for (const [key, value] of Object.entries(child.if) as [string, any])
-					if (scope[key] !== value) return []
+					if (scope[key] !== value()) return []
 			if (child.when)
 				for (const [key, value] of Object.entries(child.when) as [string, any])
-					if (!scope[key](value)) return []
+					if (!scope[key](value())) return []
 			previous.had = true
 		}
 		return [child]

@@ -1,4 +1,10 @@
-import { isObject, isString } from 'mutts'
+function isObject(value: any): value is object {
+	return typeof value === 'object' && value !== null
+}
+
+function isString(value: any): value is string {
+	return typeof value === 'string'
+}
 
 /**
  * Utility for generating CSS class names
